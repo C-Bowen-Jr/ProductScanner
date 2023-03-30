@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Test Product",
+    "sku": "REMOVE_ME",
+    "stock": 0,
+    "sold": 0,
+    "released": "01/01/1900",
+    "retired": false
+  }
+]

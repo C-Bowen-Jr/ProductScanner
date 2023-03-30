@@ -1,0 +1,71 @@
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 2px solid #bbbbbb;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+<div style="background-color:black;color:white;padding:20px;">
+  <h2>Terminal log</h2>
+  ##LOGTABLE##
+</div>
+<div style="background-color:white;color:black;padding:20px;">
+  <h2>Current Inventory</h2>
+  <table style="color:black;">
+    <tr>
+      <th>SKU</th>
+      <th>Product</th>
+      <th>Qty</th>
+    </tr>
+    ##INVENTORYTABLE##
+  </table>
+</div>
+<br>
+<div style="background-color:white;color:black;padding:20px;">
+  <h2>Stats</h2>
+  <table style="color:black;">
+    <tr>
+      <th>Stat</th>
+      <th>Qty</th>
+    </tr>
+    <tr>
+      <td>Total Sold</td>
+      <td>##TOTALSOLD##</td>
+    </tr>
+    <tr>
+      <td>Total Manufactured</td>
+      <td>##TOTALMANUFACTURED##</td>
+    </tr>
+    <tr>
+      <td>Weekly Sold</td>
+      <td>##WEEKLYSOLD##</td>
+    </tr>
+    <tr>
+      <td>Weekly Manufactured</td>
+      <td>##WEEKLYMANUFACTURED##</td>
+    </tr>
+    <tr>
+      <td>Currently Stocked</td>
+      <td>##CURRENTLYSTOCKED##</td>
+    </tr>
+  </table>
+</div>
+<div style="background-color:black;color:white;padding:20px;">
+##FINALREPORT##
+</div>
+</body>
+</html>
