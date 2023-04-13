@@ -28,6 +28,7 @@ wkStock = 0
 wkSell = 0
 choice = -1
 input_queue = queue.Queue()
+load_dotenv()
 
 # Classes
 class Product:
@@ -184,20 +185,18 @@ def parsDecode(parscode):
 def SendReportEmail():
   global RunState, WeeklyReport, ProductArray, DebugMode
 
-  load_dotenv
-
   # Create message container - the correct MIME type is multipart/alternative.
   msg = MIMEMultipart('alternative')
   msg['Subject'] = "Weekly Stock Report"
-  msg['To'] = os.envget("EMAIL_TO")
-  msg['From'] = os.envget("EMAIL_FROM")
+  msg['To'] = os.getenv("EMAIL_TO")
+  msg['From'] = os.getenv("EMAIL_FROM")
   MsgFromArray = ""
   Stocks = []
   EmailFormated = ""
   html = open("ServerEmail_Template.html", "r")
 
-  server = smtplib.SMTP_SSL(os.envget("SMTP_NAME"), int(os.envget("SMTP_PORT")))
-  server.login(os.envget("EMAIL_FROM"), os.envget("EFROM_PASSWORD"))
+  server = smtplib.SMTP_SSL(os.getenv("SMTP_NAME"), int(os.getenv("SMTP_PORT")))
+  server.login(os.getenv("EMAIL_FROM"), os.getenv("EFROM_PASSWORD"))
 
 
   # Build Weekly In/Out Report log
@@ -235,8 +234,8 @@ def SendReportEmail():
   else:
     #actually send email
     server.sendmail(
-      os.envget("EMAIL_FROM"),
-      os.envget("EMAIL_TO"),
+      os.getenv("EMAIL_FROM"),
+      os.getenv("EMAIL_TO"),
       msg.as_string())
     print (f"({datetime.now()}) Email sent to mail server")
   html.close()
@@ -271,6 +270,9 @@ def SundayNineAM():
         wkSell = 0
 
       PerformUpdateCheck()
+
+def env_setup():
+  return os.path.isfile(".env")
 
 # --------- Raw SAVE DATA LINES
 def ReadSaveData():
@@ -349,27 +351,6 @@ def ProdScanMain():
 
   #Test bed on main input loop
   while True:
-    # Set inputChoice to a "no input" flag represented by -1
-    # Then set variables i Input, o Output and e Exception, only i will be used
-    #inputChoice = -1
-    # --- Input method only worked with linux
-    #i, o, e = select.select( [sys.stdin], [], [], 1 )
-    #
-    ## Set inputChoice from either user or from 9AM-> update thread
-    #if (i):
-    #  inputChoice = sys.stdin.readline().strip()
-    #  sys.stdin.flush()
-    #else:
-    #  # if there was no input, but choice has been changed to Update, then exit
-    #  # the loop
-    #  if inputChoice == "Update":
-    #    print ("Updating code found!")
-    #    return "Update" # Be sure to exit the loop
-    #
-    ## Process the input if any as a menu choice or an QR action code
-    #if inputChoice == -1:
-    #  pass
-    #elif str(inputChoice).isdigit():
     if not input_queue.empty():
       inputChoice = input_queue.get()
     else:
@@ -382,7 +363,10 @@ def ProdScanMain():
       # Menu option choices
       # Force email with stock details (wont erase weekly report)
       if MenuOptions[inputChoice] == "Force Email":
-        SendReportEmail()
+        if env_setup():
+          SendReportEmail()
+        else:
+          print("Please setup your .env file")
 
       elif MenuOptions[inputChoice] == "Clear Screen":
         pass #print ("The screen is about to be cleared")
