@@ -10,13 +10,14 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import time, traceback, threading
+import queue
 from datetime import datetime
 import select
 import sys
 import json
 
 # Version breakdown: Major change. Minor fix/change. Times code modified
-Version = "5.4.30"
+Version = "5.6.31"
 
 # Global variables
 RunState = "Run"
@@ -26,6 +27,7 @@ ProductArray = []
 wkStock = 0
 wkSell = 0
 choice = -1
+input_queue = queue.Queue()
 
 # Classes
 class Product:
@@ -73,6 +75,11 @@ def every(delay, task):
       # logger.exception("Problem while executing repetitive task.")
     # skip tasks if we are behind schedule:
     next_time += (time.time() - next_time) // delay * delay + delay
+
+def get_input():
+  while True:
+    input_data = input().strip()
+    input_queue.put(input_data)
 
 # String Stripper, returns a subset of a string between 2 points
 def stringStripper(original, begining, ending):
@@ -317,6 +324,9 @@ def ProdScanInit():
   ThreadTask = threading.Thread(target=lambda: every(60, SundayNineAM))
   ThreadTask.daemon = True
   ThreadTask.start()
+  input_thread = threading.Thread(target=get_input)
+  input_thread.daemon = True
+  input_thread.start()
 
 # Main Function
 def ProdScanMain():
@@ -325,7 +335,7 @@ def ProdScanMain():
   WREcho = ""
   WRETS = datetime.now()
 
-  inputChoice = -1
+  inputChoice = ""
   Opt = 1
 
   print (f"---Inventory Server Product Scanner---  v({Version})")
@@ -341,24 +351,31 @@ def ProdScanMain():
   while True:
     # Set inputChoice to a "no input" flag represented by -1
     # Then set variables i Input, o Output and e Exception, only i will be used
-    inputChoice = -1
-    i, o, e = select.select( [sys.stdin], [], [], 1 )
-
-    # Set inputChoice from either user or from 9AM-> update thread
-    if (i):
-      inputChoice = sys.stdin.readline().strip()
-      sys.stdin.flush()
+    #inputChoice = -1
+    # --- Input method only worked with linux
+    #i, o, e = select.select( [sys.stdin], [], [], 1 )
+    #
+    ## Set inputChoice from either user or from 9AM-> update thread
+    #if (i):
+    #  inputChoice = sys.stdin.readline().strip()
+    #  sys.stdin.flush()
+    #else:
+    #  # if there was no input, but choice has been changed to Update, then exit
+    #  # the loop
+    #  if inputChoice == "Update":
+    #    print ("Updating code found!")
+    #    return "Update" # Be sure to exit the loop
+    #
+    ## Process the input if any as a menu choice or an QR action code
+    #if inputChoice == -1:
+    #  pass
+    #elif str(inputChoice).isdigit():
+    if not input_queue.empty():
+      inputChoice = input_queue.get()
     else:
-      # if there was no input, but choice has been changed to Update, then exit
-      # the loop
-      if inputChoice == "Update":
-        print ("Updating code found!")
-        return "Update" # Be sure to exit the loop
+      inputChoice = ""
 
-    # Process the input if any as a menu choice or an QR action code
-    if inputChoice == -1:
-      pass
-    elif str(inputChoice).isdigit():
+    if str(inputChoice).isdigit():
       # offset inputChoice for a 0 based index of menu choices
       inputChoice = int(inputChoice) - 1
 
