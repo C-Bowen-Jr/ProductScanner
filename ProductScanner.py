@@ -7,6 +7,7 @@
 import os
 from dotenv import load_dotenv
 import smtplib
+from ssl import create_default_context
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import time, traceback, threading
@@ -195,7 +196,7 @@ def SendReportEmail():
   EmailFormated = ""
   html = open("ServerEmail_Template.html", "r")
 
-  server = smtplib.SMTP_SSL(os.getenv("SMTP_NAME"), int(os.getenv("SMTP_PORT")))
+  server = smtplib.SMTP_SSL(os.getenv("SMTP_NAME"), int(os.getenv("SMTP_PORT")), context=create_default_context())
   server.login(os.getenv("EMAIL_FROM"), os.getenv("EFROM_PASSWORD"))
 
 
@@ -233,11 +234,13 @@ def SendReportEmail():
       f.write(EmailFormated)
   else:
     #actually send email
-    server.sendmail(
-      os.getenv("EMAIL_FROM"),
-      os.getenv("EMAIL_TO"),
-      msg.as_string())
-    print (f"({datetime.now()}) Email sent to mail server")
+    try:
+      server.sendmail(os.getenv("EMAIL_FROM"),os.getenv("EMAIL_TO"),msg.as_string())
+      print (f"({datetime.now()}) Email sent to mail server")
+    except:
+      print("Message send fail")
+      raise
+
   html.close()
   server.quit()
 
@@ -381,7 +384,7 @@ def ProdScanMain():
       # Save and Exit
       WriteSaveData(ArrayToJson(ProductArray))
       return RunState
-    else:
+    elif inputChoice != "":
       #QR action code scanned
       WeeklyReport.append(inputChoice) # Weekly Report, only add if not a menu item
       WRETS = datetime.now()
