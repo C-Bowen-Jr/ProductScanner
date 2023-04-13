@@ -127,8 +127,3 @@ For best results in entering Sell/Stock codes, I have yet to release the compani
 this. It is currently extremely hard-coded to specification and not currently suitable for sharing. However,
 the concept, should you chose some likewise homemade solution, is to generate an image gallery of buttons
 that callback their associated SKU. Then with some counter buttons, increment or decrement the quantity part.
-
-## Compatability
-
-Current version uses a method for threading input with the main loop that doesn't work on Windows. Works fine
-with linux. Untested on Mac.
