@@ -1,4 +1,4 @@
-## Inventory Server
+# Inventory Server
 
 This is a simple inventory server to track products for small hobby businesses. The dataset it maintains is:
 - Product Name: a descritive title (ie. "Umbrella Corp Vinyl Sticker")
