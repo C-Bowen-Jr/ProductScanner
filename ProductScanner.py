@@ -166,7 +166,7 @@ def parsDecode(parscode):
   elif parscode == "FINALREPORT":
     for entry in WeeklyReport:
       if entry.find("ERROR") > -1: # Error print in bold red
-        htmlreturn += '<b style="color:red;>"{0}</b><br>'.format(entry)
+        htmlreturn += '<b style="color:red;">{0}</b><br>'.format(entry)
       else:
         htmlreturn += "{0}<br>".format(entry)
   else:
