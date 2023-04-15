@@ -1,71 +1,216 @@
 <html>
 <head>
 <style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
+
+div#light_section{
+  background-color: #eeeeee;
+  color: #202020;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+div#light_section h1{
+  background-color: green;
+  color: white;
+  text-align: center;
+  width: 280px;
+  height: 40px;
+  border-radius: 10px;
+  padding: 3px 15px;
+  margin-left: 15px;
+  margin-top: 35px;
 }
 
-td, th {
-  border: 2px solid #bbbbbb;
+div#dark_section{
+  background-color: #202020;
+  color: #eeeeee;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+div#dark_section h1{
+  background-color: green;
+  color: white;
+  text-align: center;
+  width: 280px;
+  height: 40px;
+  border-radius: 10px;
+  padding: 3px 15px;
+  margin-left: 15px;
+  margin-top: 35px;
+}
+
+div#sales_and_stocks{
+  margin: 15px;
+}
+div#sales_and_stocks table{
+  border-collapse: collapse;
+  width: 50%;
+  margin-bottom: 20px;
+}
+div#sales_and_stocks caption{
+  background-color: green;
+  color: white;
+  border-radius: 10px 10px 0px 0px;
+  width: 80px;
+  padding: 4px;
+  margin: auto;
+}
+div#sales_and_stocks th{
+  background-color: green;
+  color: white;
   text-align: left;
   padding: 8px;
 }
+th#product80{
+  border-radius: 10px 0px 0px 0px;
+  width: 80%;
+}
+th#quantity20{
+  border-radius: 0px 10px 0px 0px;
+  width: 20%
+}
+div#sales_and_stocks td{
+  text-alight: left;
+  padding: 8px;
+}
+div#sales_and_stocks tr{
+  border-bottom: 1px solid black;
+}
+tr#stock{
+  background-color: #85d585;
+  color: black;
+}
+tr#sale{
+  background-color: #d58585;
+  color: black;
+}
+tr#ok_stock{
+  background-color: #eeeeee;
+  color: black;
+}
+tr#low_stock{
+  background-color: #d58585;
+  color: black;
+}
 
-tr:nth-child(even) {
-  background-color: #dddddd;
+div#current_inventory{
+  margin: 15px;
+}
+div#current_inventory table{
+  border-collapse: collapse;
+  width: 80%;
+}
+div#current_inventory th{
+  background: green;
+  color: white;
+  text-align: left;
+  padding: 8px;
+}
+div#current_inventory td{
+  text-alight: left;
+  padding: 8px;
+}
+div#current_inventory tr{
+  border-bottom: 1px solid black;
+}
+div#current_inventory tr:nth-child(odd){
+  background-color: #aaaaaa;
+}
+
+div#stats{
+  margin: 15px;
+}
+div#stats table{
+  border-collapse: collapse;
+  width: 50%;
+}
+div#stats th{
+  background-color: green;
+  color: white;
+  text-align: left;
+  padding: 8px;
+}
+div#stats td{
+  text-alight: left;
+  padding: 8px;
+}
+div#stats tr{
+  background-color: #eeeeee;
+  border-bottom: 1px solid black;
+}
+div#stats tr:nth-child(odd){
+  background-color: #aaaaaa;
+}
+
+div#terminal_log{
+  margin: 15px;
+  width: 80%;
+}
+div#terminal_log ul{
+  background-color: #303030;
+  color: white;
+  margin-right: 15px;
+  padding: 30px 0px 30px 30px;
+  border-radius: 5px 5px 5px 5px;
+}
+li#log_error{
+  color: red;
 }
 </style>
 </head>
+
 <body>
-<div style="background-color:black;color:white;padding:20px;">
-  <h2>Terminal log</h2>
-  ##LOGTABLE##
-</div>
-<div style="background-color:white;color:black;padding:20px;">
-  <h2>Current Inventory</h2>
-  <table style="color:black;">
-    <tr>
-      <th>SKU</th>
-      <th>Product</th>
-      <th>Qty</th>
-    </tr>
-    ##INVENTORYTABLE##
-  </table>
-</div>
-<br>
-<div style="background-color:white;color:black;padding:20px;">
-  <h2>Stats</h2>
-  <table style="color:black;">
-    <tr>
-      <th>Stat</th>
-      <th>Qty</th>
-    </tr>
-    <tr>
-      <td>Total Sold</td>
-      <td>##TOTALSOLD##</td>
-    </tr>
-    <tr>
-      <td>Total Manufactured</td>
-      <td>##TOTALMANUFACTURED##</td>
-    </tr>
-    <tr>
-      <td>Weekly Sold</td>
-      <td>##WEEKLYSOLD##</td>
-    </tr>
-    <tr>
-      <td>Weekly Manufactured</td>
-      <td>##WEEKLYMANUFACTURED##</td>
-    </tr>
-    <tr>
-      <td>Currently Stocked</td>
-      <td>##CURRENTLYSTOCKED##</td>
-    </tr>
-  </table>
-</div>
-<div style="background-color:black;color:white;padding:20px;">
-##FINALREPORT##
-</div>
+<div id="light_section">
+    <h1>Sales and Stocks</h1>
+    <div id="sales_and_stocks">
+      ##SALES_STOCKS##
+    </div>
+  </div>
+  <div id="dark_section">
+    <h1>Current Inventory</h1>
+    <div id="current_inventory">
+      <table>
+        <tr>
+          <th style="border-radius: 10px 0px 0px 0px;width:25%;">SKU</th>
+          <th style="border-radius:  0px 0px 0px 0px;width:60%;">Product</th>
+          <th style="border-radius: 0px 10px 0px 0px;width:15%;">Quantity</th>
+        </tr>
+        ##INVENTORY##
+      </table>
+    </div>
+    <h1>Stats</h1>
+    <div id="stats">
+      <table>
+        <tr>
+          <th id="product80">Statistic</th>
+          <th id="quantity20">Quantity</th>
+        </tr>
+        <tr>
+          <td>Weekly Sold</td>
+          <td>##WEEKLYSOLD##</td>
+        <tr>
+          <td>Weekly Produced</td>
+          <td>##WEEKLYPRODUCED##</td>
+        </tr>
+        <tr>
+          <td>Total Sold</td>
+          <td>##TOTALSOLD##</td>
+        <tr>
+          <td>Total Produced</td>
+          <td>##TOTALPRODUCED##</td>
+        </tr>
+        <tr>
+          <td>Currently Stocked</td>
+          <td>##CURRENTLYSTOCKED##</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div id="light_section">
+  <h1>Terminal Log</h1>
+  <div id="terminal_log">
+    <ul>
+      ##TERMINAL##
+    </ul>
+  </div>
 </body>
 </html>

@@ -18,11 +18,11 @@ import sys
 import json
 
 # Version breakdown: Major change. Minor fix/change. Times code modified
-Version = "5.6.31"
+Version = "5.7.32"
 
 # Global variables
 RunState = "Run"
-DebugMode = False
+DebugMode = True
 WeeklyReport = []
 ProductArray = []
 wkStock = 0
@@ -110,28 +110,31 @@ def parsDecode(parscode):
   wreDate = ""
   wreSKU = ""
   wreQty = 0
+  sale_or_stock_id = ""
 
-  if parscode == "LOGTABLE":
+  if parscode == "SALES_STOCKS":
     for WREntry in WeeklyReport:
-      if "&" in WREntry: # Expected code '&date[SKU]quantity'
+      if WREntry[0] == "&": # Expected code '&date[SKU]quantity'
         wreDate = stringStripper(WREntry, "&", "[")
         if datebreak != wreDate:
           if datebreak != 0: # subsequent days need an end to the prior day's table
-            htmlreturn += "\n</table>"
-          htmlreturn += """\n<table style="color:white;"><caption><b>{0}</b></caption>
-    <tr>
-      <th>Product</th>
-      <th>Qty</th>
-    </tr>""".format(wreDate)
+            htmlreturn += "\n    </table>"
+          htmlreturn += """
+    <table><caption>{0}</caption>
+      <tr>
+        <th id="product80">Product</th>
+        <th id="quantity20">Quantity</th>
+      </tr>""".format(wreDate)
           datebreak = wreDate # update a new datebreak point
+
         wreSKU = stringStripper(WREntry, "[","]")
         wreQty = int(stringStripper(WREntry, "]", None))
-        if wreQty > 0: # positive is green
+        if wreQty > 0: # positive is green for stock
           wkStock += wreQty
-          htmlreturn += '<tr style="background-color: green;">'
-        elif wreQty < 0: # negative is red
-          wkSell -= wreQty
-          htmlreturn += '<tr style="background-color: red;">'
+          htmlreturn += '<tr id="stock">'
+        elif wreQty < 0: # negative is red for sale
+          wkSell -= wreQty # subtract negative to get the positive
+          htmlreturn += '<tr id="sale">'
         else:
           htmlreturn += '<tr>'
 
@@ -142,8 +145,9 @@ def parsDecode(parscode):
     # After all WREntry entries are parsed, add a final table break
     htmlreturn += "\n</table>"
 
-  elif parscode == "INVENTORYTABLE":
-    htmlProdTemplate = """<tr{3}>
+  elif parscode == "INVENTORY":
+    htmlProdTemplate = """
+    <tr id="{3}">
       <td>{0}</td>
       <td>{1}</td>
       <td>{2}</td>
@@ -151,33 +155,40 @@ def parsDecode(parscode):
 """
     for prod in ProductArray:
       if not prod.Retired and prod.Stocked > 1:
-        htmlreturn += htmlProdTemplate.format(prod.SKU, prod.Title, prod.Stocked, '')
+        htmlreturn += htmlProdTemplate.format(prod.SKU, prod.Title, prod.Stocked, 'ok_stock')
       elif not prod.Retired:
-        htmlreturn += htmlProdTemplate.format(prod.SKU, prod.Title, prod.Stocked,' style="background-color: red;"')
+        htmlreturn += htmlProdTemplate.format(prod.SKU, prod.Title, prod.Stocked,'low_stock')
+
+  elif parscode == "WEEKLYSOLD":
+    htmlreturn += "\n<td>{0}</td>".format(wkSell)
+
+  elif parscode == "WEEKLYPRODUCED":
+    htmlreturn += "\n<td>{0}</td>".format(wkStock)
 
   elif parscode == "TOTALSOLD":
     for prod in ProductArray:
       counter += prod.Sold
-    htmlreturn = "<td>{0}</td>".format(counter)
-  elif parscode == "TOTALMANUFACTURED":
+    htmlreturn = "\n<td>{0}</td>".format(counter)
+
+  elif parscode == "TOTALPRODUCED":
     for prod in ProductArray:
       prod.GetManufactured()
       counter += prod.GetManufactured()
-    htmlreturn = "<td>{0}</td>".format(counter)
-  elif parscode == "WEEKLYSOLD":
-    htmlreturn += "<td>{0}</td>".format(wkSell)
-  elif parscode == "WEEKLYMANUFACTURED":
-    htmlreturn += "<td>{0}</td>".format(wkStock)
+      htmlreturn = "\n<td>{0}</td>".format(counter)
+
   elif parscode == "CURRENTLYSTOCKED":
     for prod in ProductArray:
       counter += prod.Stocked
-    htmlreturn = "<td>{0}</td>".format(counter)
-  elif parscode == "FINALREPORT":
+    htmlreturn = "\n<td>{0}</td>".format(counter)
+
+  elif parscode == "TERMINAL":
     for entry in WeeklyReport:
+      # entry[1:] is to skip the tagging char
       if entry.find("ERROR") > -1: # Error print in bold red
-        htmlreturn += '<b style="color:red;">{0}</b><br>'.format(entry)
+        htmlreturn += '<li id="log_error">{0}</li>'.format(entry[1:])
       else:
-        htmlreturn += "{0}<br>".format(entry)
+        htmlreturn += "<li>{0}</li>".format(entry[1:])
+
   else:
     return "<b>ERROR in parscode</b>"
   return htmlreturn
@@ -377,7 +388,6 @@ def ProdScanMain():
         print ("Checking...")
         PerformUpdateCheck()
       elif MenuOptions[inputChoice] == "Exit":
-        print ("Saving...")
         WriteSaveData(ArrayToJson(ProductArray))
         RunState = "Exit"
 
@@ -386,7 +396,6 @@ def ProdScanMain():
       return RunState
     elif inputChoice != "":
       #QR action code scanned
-      WeeklyReport.append(inputChoice) # Weekly Report, only add if not a menu item
       WRETS = datetime.now()
       FoundProd = False
       # QuickAdd code found, parse
@@ -397,7 +406,7 @@ def ProdScanMain():
         FoundProd = True #set if creating, technically true so no error later
         WREcho = f"Creating new product! {tempTitle}[{tempSKU}] with an initial batch of {tempMade}"
         print (WREcho)
-        WREcho = f"{WRETS.date()} {WRETS.hour}:{WRETS.minute} | {WREcho}"
+        WREcho = f"&{WRETS.date()}&#9[{tempSKU}]{tempMade}"
         WeeklyReport.append(WREcho) # Weekly Report
         NewProduct = Product(tempTitle, tempSKU,int(tempMade),0)
         NewProduct.SetReleasedToPyDate(WRETS.date())
@@ -412,18 +421,17 @@ def ProdScanMain():
             # Get out of the loop now that we found the right one
             FoundProd = True
             Prods.SetRetired(True)
-            WeeklyReport.append(f"{Prods.Title} has been retired.")
+            WeeklyReport.append(f"@{Prods.Title} has been retired.")
             break
           elif "restore:" in inputChoice and Prods.SKU == stringStripper(inputChoice, ":", None) :
             # Get out of the loop now that we found the right one
             FoundProd = True
             Prods.SetRetired(False)
-            WeeklyReport.append(f"{Prods.Title} has been taken out of retirement.")
+            WeeklyReport.append(f"@{Prods.Title} has been taken out of retirement.")
             break
           elif "inspect:" in inputChoice and Prods.SKU == stringStripper(inputChoice, ":", None) :
             # Get out of the loop now that we found the right one
             FoundProd = True
-            print (f"Inspecting > {Prods.SKU}")
             Prods.PrintProduct()
             break
 
@@ -433,8 +441,7 @@ def ProdScanMain():
         try:
           SKUcount = int(stringStripper(inputChoice, "*", None))#choice[choice.find("*")+1:])
         except:
-          WREcho = f"'{inputChoice}' was scanned, but multiplier was not found"
-          FoundProd = False
+          WREcho = f"!'{inputChoice}' was scanned, but multiplier was not found"
           break
 
         # is this sku the choice sku and is it less than 0 (selling)
@@ -443,7 +450,7 @@ def ProdScanMain():
           Prods.Sold -= SKUcount # subtracting negative number increases sold
           Prods.PrintProduct()
           FoundProd = True
-          WREcho = f"&{WRETS.date()}[{Prods.SKU}]{SKUcount}"
+          WREcho = f"&{WRETS.date()}&#9[{Prods.SKU}]{SKUcount}"
           WeeklyReport.append(WREcho) # Weekly Report
           WriteSaveData(ArrayToJson(ProductArray))
           break
@@ -453,7 +460,7 @@ def ProdScanMain():
           Prods.Stocked += SKUcount
           Prods.PrintProduct()
           FoundProd = True
-          WREcho = f"&{WRETS.date()}[{Prods.SKU}]{SKUcount}"
+          WREcho = f"&{WRETS.date()}&#9[{Prods.SKU}]{SKUcount}"
           WeeklyReport.append(WREcho) # Weekly Report
           WriteSaveData(ArrayToJson(ProductArray))
           break
@@ -462,15 +469,15 @@ def ProdScanMain():
           Prods.Stocked -= 1
           Prods.PrintProduct()
           FoundProd = True
-          WREcho = f"&{WRETS.date()}[{Prods.SKU}]{SKUcount}"
+          WREcho = f"&{WRETS.date()}&#9[{Prods.SKU}]{SKUcount}"
           WeeklyReport.append(WREcho) # Weekly Report
           WriteSaveData(ArrayToJson(ProductArray))
           break
 
       # No matching product, but also ignore the open/close statements
       if not FoundProd:
-        WREcho = f" -{WRETS.date()} {WRETS.hour}:{WRETS.minute} | ERROR '{inputChoice}''"
-        WeeklyReport.append(WREcho) # Weekly Report
+        WREcho = f"@{WRETS.date()}&#9| ERROR '{inputChoice}' isn't a product or valid choice"
+        WeeklyReport.append(WREcho)
 
 
 # Notes:
