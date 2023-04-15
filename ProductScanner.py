@@ -22,7 +22,7 @@ Version = "5.7.32"
 
 # Global variables
 RunState = "Run"
-DebugMode = True
+DebugMode = False
 WeeklyReport = []
 ProductArray = []
 wkStock = 0
